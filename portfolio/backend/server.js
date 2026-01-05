@@ -13,22 +13,8 @@ const AdminRoute = require("./routes/Admin");
 connectDB();
 app.use(cookieParser());
 app.use(express.json());
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.FRONTEND_ADMIN_URL,
-];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-  })
-);
+app.use(cors());
 
 app.get("/", (req, res) => {
   res.status(200).json({
