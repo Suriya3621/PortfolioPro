@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const allowedOrigins = [
   /^https:\/\/.*\.netlify\.app$/,
-  "http://localhost:5173",
+  "http://localhost:4000",
 ]
 
 app.use(
