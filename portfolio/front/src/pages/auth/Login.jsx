@@ -76,22 +76,22 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
     
     setIsSubmitting(true);
     try {
       const data = await Fetch.post("login", formData);
+      console.log(data)
+ 
       setUserCookie("userId", data.data.user._id, {
         path: "/",
         secure: true,
-        sameSite: "strict",
         maxAge: 2592000,
       });
       navigate("/dashboard");
     } catch (err) {
       await new Promise(resolve => setTimeout(resolve, 800));
-      
+      console.log(err)
       if (err.response?.status === 401) {
         setErrors({
           email: "Invalid credentials",

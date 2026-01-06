@@ -23,7 +23,7 @@ export const useUserStore = create(
           }
         } catch (error) {
           set({ error: error.message, isLoading: false });
-          console.error('Error fetching user:', error);
+          console.log('Error fetching user:', error);
           return null;
         }
       },

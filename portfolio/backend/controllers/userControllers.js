@@ -46,6 +46,107 @@ exports.register = async (req, res) => {
   }
 };
 
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return Message(res, 400, false, "Please provide email and password");
+    }
+
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user || !(await user.isValidPassword(password))) {
+      return Message(res, 401, false, "Wrong Password,Check it");
+    }
+
+    // Remove password from response
+    user.password = undefined;
+
+    // Send welcome email (non-blocking)
+    try {
+      const html = `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome Back!</title>
+    <style>
+      @media screen and (max-width: 600px) {
+        .main-table {
+          width: 100% !important;
+        }
+        .content {
+          padding: 20px !important;
+        }
+        .btn {
+          padding: 12px 20px !important;
+          font-size: 16px !important;
+        }
+      }
+    </style>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #f4f4f4;">
+    <table cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f4;">
+      <tr>
+        <td align="center" style="padding: 40px 10px;">
+          <table class="main-table" cellpadding="0" cellspacing="0" width="600" style="width: 600px; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
+            <tr>
+              <td align="center" style="background-color: #4f46e5; padding: 40px 20px;">
+                <h1 style="margin: 0; font-size: 28px; font-family: Arial, sans-serif; color: #ffffff;">Welcome Back!</h1>
+                <p style="color: #e0e0ff; font-size: 16px; margin: 10px 0 0;">You're now logged in successfully.</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="content" style="padding: 30px; font-family: Arial, sans-serif; color: #333333;">
+                <h2 style="margin-top: 0;">Hi ${user.name},</h2>
+                <p style="font-size: 16px; line-height: 24px;">
+                  We're glad to see you back! Explore your dashboard and take advantage of all the new updates and features we’ve added.
+                </p>
+                <p style="text-align: center;">
+                  <a href="${process.env.FRONTEND_URL}/dashboard" class="btn" style="display: inline-block; padding: 14px 28px; background-color: #4f46e5; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 6px; font-size: 18px;">
+                    Go to Dashboard
+                  </a>
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding: 20px; font-size: 12px; color: #999999; font-family: Arial, sans-serif;">
+                You received this email because you just logged in to your account.<br />
+                &copy; 2025 Portfolio. All rights reserved.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+
+`;
+      sendEmail({
+        email,
+        subject: "Welcome Back",
+        html,
+      }).catch((emailError) => {
+        console.error("Email sending failed:", emailError);
+      });
+      
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError);
+    }
+
+    sendToken(res, user);
+    return Message(res, 200, true, "Login successful", {
+      user,
+    });
+  } catch (err) {
+    return handleError(res, err, "Login");
+  }
+};
+
+
 exports.socialLinksRegister = async (req, res) => {
   try {
     const { socialLinks } = req.body;
@@ -238,105 +339,6 @@ exports.verifyPassword = async (req, res) => {
   }
 };
 
-exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return Message(res, 400, false, "Please provide email and password");
-    }
-
-    const user = await User.findOne({ email }).select("+password");
-
-    if (!user || !(await user.isValidPassword(password))) {
-      return Message(res, 401, false, "Wrong Password,Check it");
-    }
-
-    // Remove password from response
-    user.password = undefined;
-
-    // Send welcome email (non-blocking)
-    try {
-      const html = `
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Welcome Back!</title>
-    <style>
-      @media screen and (max-width: 600px) {
-        .main-table {
-          width: 100% !important;
-        }
-        .content {
-          padding: 20px !important;
-        }
-        .btn {
-          padding: 12px 20px !important;
-          font-size: 16px !important;
-        }
-      }
-    </style>
-  </head>
-  <body style="margin: 0; padding: 0; background-color: #f4f4f4;">
-    <table cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f4;">
-      <tr>
-        <td align="center" style="padding: 40px 10px;">
-          <table class="main-table" cellpadding="0" cellspacing="0" width="600" style="width: 600px; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
-            <tr>
-              <td align="center" style="background-color: #4f46e5; padding: 40px 20px;">
-                <h1 style="margin: 0; font-size: 28px; font-family: Arial, sans-serif; color: #ffffff;">Welcome Back!</h1>
-                <p style="color: #e0e0ff; font-size: 16px; margin: 10px 0 0;">You're now logged in successfully.</p>
-              </td>
-            </tr>
-            <tr>
-              <td class="content" style="padding: 30px; font-family: Arial, sans-serif; color: #333333;">
-                <h2 style="margin-top: 0;">Hi ${user.name},</h2>
-                <p style="font-size: 16px; line-height: 24px;">
-                  We're glad to see you back! Explore your dashboard and take advantage of all the new updates and features we’ve added.
-                </p>
-                <p style="text-align: center;">
-                  <a href="${process.env.FRONTEND_URL}/dashboard" class="btn" style="display: inline-block; padding: 14px 28px; background-color: #4f46e5; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 6px; font-size: 18px;">
-                    Go to Dashboard
-                  </a>
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding: 20px; font-size: 12px; color: #999999; font-family: Arial, sans-serif;">
-                You received this email because you just logged in to your account.<br />
-                &copy; 2025 Portfolio. All rights reserved.
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>
-
-`;
-      sendEmail({
-        email,
-        subject: "Welcome Back",
-        html,
-      }).catch((emailError) => {
-        console.error("Email sending failed:", emailError);
-      });
-    } catch (emailError) {
-      console.error("Email sending failed:", emailError);
-    }
-
-    sendToken(res, user);
-
-    return Message(res, 200, true, "Login successful", {
-      user,
-    });
-  } catch (err) {
-    return handleError(res, err, "Login");
-  }
-};
 
 exports.logout = async (req, res) => {
   try {
