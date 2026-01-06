@@ -18,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = [
   /^https:\/\/.*\.netlify\.app$/,
   "http://localhost:4000",
+  "https://portfolio-proo.netlify.app",
 ]
 
 app.use(
