@@ -16,21 +16,25 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.FRONTEND_ADMIN_URL,
-];
+  /^https:\/\/.*\.netlify\.app$/,
+  "http://localhost:5173",
+]
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"));
+    origin(origin, callback) {
+      if (!origin) return callback(null, true)
+
+      const allowed = allowedOrigins.some(o =>
+        o instanceof RegExp ? o.test(origin) : o === origin
+      )
+
+      callback(null, allowed)
     },
     credentials: true,
   })
-);
+)
+
 
 app.get("/", (req, res) => {
   res.status(200).json({
