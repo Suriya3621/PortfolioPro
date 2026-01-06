@@ -110,7 +110,7 @@ export default function BuyPortfolioHome() {
         setError("Failed to load portfolios. No data available.");
       }
     } catch (err) {
-      console.error("Fetch error:", err);
+      console.log("Fetch error:", err);
       setError("Unable to connect to server. Please try again later.");
     } finally {
       setLoading(false);
